@@ -1,0 +1,24 @@
+{
+    "name": "vanilla-container",
+    "version": "1.0.0",
+    "description": "",
+    "main": "main.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/jeff-hykin/vanilla-container.git"
+    },
+    "keywords": [
+        "javascript",
+        "vanilla",
+        "dom"
+    ],
+    "author": "",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/jeff-hykin/vanilla-container/issues"
+    },
+    "homepage": "https://github.com/jeff-hykin/vanilla-container#readme"
+}
