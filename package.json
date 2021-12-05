@@ -18,8 +18,8 @@
         "dom"
     ],
     "exports": {
-        "import": "./main/main.mjs",
-        "require": "./main/main.js"
+        "import": "./main.mjs",
+        "require": "./main.js"
     },
     "author": "",
     "license": "MIT",
