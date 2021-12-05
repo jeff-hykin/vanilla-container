@@ -1,6 +1,6 @@
 {
     "name": "@!vanilla/container",
-    "version": "1.0.1",
+    "version": "1.0.3",
     "description": "A simple container element !vanilla component",
     "main": "main.js",
     "scripts": {
