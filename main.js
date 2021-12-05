@@ -120,6 +120,7 @@ const setProperties = (element, properties)=>{
 }
 
 // TODO: don't modify prototypes in this file
+const elementSymbol = Symbol.for("element")
 if (! (window.HTMLElement.prototype.add instanceof Function)) {
     window.HTMLElement.prototype.add = window.SVGElement.prototype.add = window.HTMLSelectElement.prototype.add = function (...inputs) {
         for (let each of inputs) {
