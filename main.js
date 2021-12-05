@@ -119,25 +119,36 @@ const setProperties = (element, properties)=>{
     }
 }
 
-// TODO: don't modify prototypes in this file
 const elementSymbol = Symbol.for("element")
-if (! (window.HTMLElement.prototype.add instanceof Function)) {
-    window.HTMLElement.prototype.add = window.SVGElement.prototype.add = window.HTMLSelectElement.prototype.add = function (...inputs) {
-        for (let each of inputs) {
-            if (typeof each == 'string') {
-                this.appendChild(new window.Text(each))
-            } else if (each instanceof Function) {
-                this.add(each())
-            } else if (each instanceof Array) {
-                this.add(...each)
-            } else if (each instanceof Object && each[elementSymbol]) {
-                this.add(each[elementSymbol])
-            } else {
-                this.appendChild(each)
-            }
+function appendChildren(element, ...children) {
+    for (const each of children) {
+        if (typeof each == 'string') {
+            element.appendChild(new window.Text(each))
+        } else if (each == null) {
+            // empty node
+            element.appendChild(new window.Text(""))
+        } else if (!(each instanceof Object)) {
+            element.appendChild(new window.Text(`${each}`))
+        } else if (each[elementSymbol]) {
+            element.appendChild(each[elementSymbol])
+        } else if (each instanceof Node) {
+            element.appendChild(each)
+        } else if (each instanceof Array) {
+            appendChildren(element, ...each)
+        } else if (each instanceof Function) {
+            // recursively
+            appendChildren(element, each())
+        } else if (each instanceof Promise) {
+            const elementPromise = each
+            const placeholder = elementPromise.placeholder || document.createElement("div")
+            setTimeout(async () => placeholder.replaceWith(await elementPromise), 0)
+            element.appendChild(placeholder)
+        // some elements are not HTML nodes and are still valid
+        } else if (each != null && each instanceof Object) {
+            element.appendChild(each)
         }
-        return this
     }
+    return element
 }
 
 module.exports = ({ row, column, reverse, wrap, positionSelf='relativeToSelf', verticalAlignment='top', horizontalAlignment='left', innerAlignment='center', textWrapAlignment, children, ...props })=>{
@@ -167,6 +178,6 @@ module.exports = ({ row, column, reverse, wrap, positionSelf='relativeToSelf', v
     // attributes
     // 
     setProperties(element, {name: "positioner", ...htmlAttributes})
-    element.add(children)
+    appendChildren(element, children)
     return element
 }
