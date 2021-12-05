@@ -1,155 +1,171 @@
-const elementSymbol = Symbol.for("element")
-// expand the HTML element ability
-Object.defineProperties(window.HTMLElement.prototype, {
-    // setting styles through a string
-    css: { set: Object.getOwnPropertyDescriptor(window.HTMLElement.prototype, 'style').set },
-    // allow setting of styles through string or object
-    style: {
-        set: function (styles) {
-            if (typeof styles == "string") {
-                this.css = styles
-            } else {
-                Object.assign(this.style, styles)
-            }
-        }
-    },
-    // allow setting of children directly
-    children: {
-        set: function(newChilden) {
-            // remove all children
-            while (this.firstChild) {
-                this.removeChild(this.firstChild)
-            }
-            // add new child nodes
-            for (let each of newChilden) {
-                this.add(each)
-            }
-        },
-        get: function() {
-            return this.childNodes
-        }
-    },
-    class: {
-        set: function(newClass) {
-            this.className = newClass
-        },
-        get: function() {
-            return this.className
-        }
+const htmlEventHandlers = new Set(['onabort', 'onanimationcancel', 'onanimationend', 'onanimationiteration', 'onanimationstart', 'onauxclick', 'onblur', 'onerror', 'onfocus', 'oncancel', 'oncanplay', 'oncanplaythrough', 'onchange', 'onclick', 'onclose', 'oncontextmenu', 'oncuechange', 'ondblclick', 'ondrag', 'ondragend', 'ondragenter', 'ondragleave', 'ondragover', 'ondragstart', 'ondrop', 'ondurationchange', 'onemptied', 'onended', 'onformdata', 'ongotpointercapture', 'oninput', 'oninvalid', 'onkeydown', 'onkeypress', 'onkeyup', 'onload', 'onloadeddata', 'onloadedmetadata', 'onloadend', 'onloadstart', 'onlostpointercapture', 'onmousedown', 'onmouseenter', 'onmouseleave', 'onmousemove', 'onmouseout', 'onmouseover', 'onmouseup', 'onmousewheel', 'onwheel', 'onpause', 'onplay', 'onplaying', 'onpointerdown', 'onpointermove', 'onpointerup', 'onpointercancel', 'onpointerover', 'onpointerout', 'onpointerenter', 'onpointerleave', 'onpointerlockchange', 'onpointerlockerror', 'onprogress', 'onratechange', 'onreset', 'onresize', 'onscroll', 'onsecuritypolicyviolation', 'onseeked', 'onseeking', 'onselect', 'onselectstart', 'onselectionchange', 'onshow', 'onslotchange', 'onstalled', 'onsubmit', 'onsuspend', 'ontimeupdate', 'onvolumechange', 'ontouchcancel', 'ontouchend', 'ontouchmove', 'ontouchstart', 'ontransitioncancel', 'ontransitionend', 'ontransitionrun', 'ontransitionstart', 'onwaiting', ])
+const fixedAttributes = new Set(['accept', 'accept-charset', 'accesskey', 'action', 'align', 'allow', 'alt', 'async', 'autocapitalize', 'autocomplete', 'autofocus', 'autoplay', 'background', 'bgcolor', 'border', 'buffered', 'capture', 'challenge', 'charset', 'checked', 'cite', 'class', 'code', 'codebase', 'color', 'cols', 'colspan', 'content', 'contenteditable', 'contextmenu', 'controls', 'coords', 'crossorigin', 'csp', 'data', 'datetime', 'decoding', 'default', 'defer', 'dir', 'dirname', 'disabled', 'download', 'draggable', 'enctype', 'enterkeyhint', 'for', 'form', 'formaction', 'formenctype', 'formmethod', 'formnovalidate', 'formtarget', 'headers', 'height', 'hidden', 'high', 'href', 'hreflang', 'http-equiv', 'icon', 'id', 'importance', 'integrity', 'intrinsicsize', 'inputmode', 'ismap', 'itemprop', 'keytype', 'kind', 'label', 'lang', 'language', 'loading', 'list', 'loop', 'low', 'manifest', 'max', 'maxlength', 'minlength', 'media', 'method', 'min', 'multiple', 'muted', 'name', 'novalidate', 'open', 'optimum', 'pattern', 'ping', 'placeholder', 'poster', 'preload', 'radiogroup', 'readonly', 'referrerpolicy', 'rel', 'required', 'reversed', 'rows', 'rowspan', 'sandbox', 'scope', 'scoped', 'selected', 'shape', 'size', 'sizes', 'slot', 'span', 'spellcheck', 'src', 'srcdoc', 'srclang', 'srcset', 'start', 'step', 'style', 'summary', 'tabindex', 'target', 'title', 'translate', 'type', 'usemap', 'value', 'width', 'wrap', ...htmlEventHandlers]) 
+const isAnHtmlAttribute = (string) => {
+    if (fixedAttributes.has(string)) {
+        return true
+    } else if (string.startsWith('data-')) {
+        return true
     }
-})
-// add()
-window.HTMLElement.prototype.add = window.SVGElement.prototype.add = window.HTMLSelectElement.prototype.add = function (...inputs) {
-    for (let each of inputs) {
-        if (typeof each == 'string') {
-            this.appendChild(new window.Text(each))
-        } else if (each instanceof Function) {
-            this.add(each())
-        } else if (each instanceof Array) {
-            this.add(...each)
-        } else if (each instanceof Object && each[elementSymbol]) {
-            this.add(each[elementSymbol])
+    return false
+}
+
+const cssHmtlOverlap = new Set(['width', 'height', 'background', 'border', 'color'])
+const splitHtmlCssAttributes = (object)=> {
+    const htmlAttributes = {}
+    const cssAttributes = {}
+    for (const [key, value] of Object.entries(object)) {
+        if (cssHmtlOverlap.has(key)) {
+            htmlAttributes[key] = value
+            cssAttributes[key] = value
+        } else if (isAnHtmlAttribute(key)) {
+            htmlAttributes[key] = value
         } else {
-            this.appendChild(each)
+            cssAttributes[key] = value
         }
     }
-    return this
+    return [htmlAttributes, cssAttributes]
 }
 
-// addClass()
-window.HTMLElement.prototype.addClass = function (...inputs) {
-    return this.classList.add(...inputs)
-}
-
-// for (let eachChild of elemCollection)
-window.HTMLCollection.prototype[Symbol.iterator] = function* () {
-    let index = 0
-    let len = this.length
-    while (index < len) {
-        yield this[index++]
+const computeDirection = (row, column, reverse) => {
+    const output = row ? 'row' : 'column'
+    if (!reverse) {
+        return output
+    } else {
+        return `${output}-reverse`
     }
 }
-// for (let eachChild of elem)
-window.HTMLElement.prototype[Symbol.iterator] = function* () {
-    let index = 0
-    let len = this.childNodes.length
-    while (index < len) {
-        yield this.childNodes[index++]
+
+const humanPositionToCssPosition = (humanPosition) => {
+    if (humanPosition === 'relativeToParent') {
+        return 'absolute'
+    } else if (humanPosition === 'relativeToSelf') {
+        return 'relative'
+    } else if (humanPosition === 'relativeToWindow') {
+        return 'fixed'
+    } else if (humanPosition === 'sticky') {
+        return 'sticky'
+    } else if (typeof humanPosition === 'string') {
+        console.warn(`positionSelf needs to be one of [ 'relativeToParent', 'relativeToSelf', 'relativeToWindow', 'sticky' ]\nbut instead it was: '${humanPosition}'`)
+    }
+    return undefined
+}
+
+const humanPositionToCssFlexbox = (humanWord) => {
+    if (humanWord.match(/^(top|left)$/i)) {
+        return 'flex-start'
+    } else if (humanWord.match(/^(bottom|right)$/i)) {
+        return 'flex-end'
+    } else {
+        return humanWord
     }
 }
-// create a setter/getter for <head>
-const originalHead = document.head
-// add a setter to document.head
-Object.defineProperty(document,"head", { 
-    set: (element) => {
-        document.head.add(...element.childNodes)
-    },
-    get: ()=>originalHead
-})
 
-// 
-// add all the dom elements
-// 
-const elements = {}
-const tagNames = ["a", "abbr", "acronym", "address", "applet", "area", "article", "aside", "audio", "b", "base", "basefont", "bdi", "bdo", "big", "blockquote", "body", "br", "button", "canvas", "caption", "center", "cite", "code", "col", "colgroup", "data", "datalist", "dd", "del", "details", "dfn", "dialog", "dir", "div", "dl", "dt", "em", "embed", "fieldset", "figcaption", "figure", "font", "footer", "form", "frame", "frameset", "h1", "h2", "h3", "h4", "h5", "h6", "head", "header", "hr", "html", "i", "iframe", "img", "input", "ins", "kbd", "label", "legend", "li", "link", "main", "map", "mark", "meta", "meter", "nav", "noframes", "noscript", "object", "ol", "optgroup", "option", "output", "p", "param", "picture", "pre", "progress", "q", "rp", "rt", "ruby", "s", "samp", "script", "section", "select", "small", "source", "span", "strike", "strong", "style", "sub", "summary", "sup", "table", "tbody", "td", "template", "textarea", "tfoot", "th", "thead", "time", "title", "tr", "track", "tt", "u", "ul", "var", "video", "wbr"]
-for (const each of tagNames) {
-    elements[each.toUpperCase()] = function(properties, ...children) {
-        // if only given children
-        if (properties instanceof window.Node || typeof properties == 'string') {
-            children.unshift(properties)
-            properties = null
+const columnAlignment = (horizontalAlignment, verticalAlignment, innerAlignment, wrap) => {
+    if (!wrap) {
+        return {
+            justifyContent: verticalAlignment,
+            alignItems: horizontalAlignment,
         }
-        // create either an html element or an svg element
-        const element = document.createElement(each)
-        if (properties instanceof Object) {
-            for (const [key, value] of Object.entries(properties)) {
-                try {
-                    element.setAttribute(key, value)
-                } catch (error) {
-                }
-                element[key] = value
+    } else {
+        return {
+            // still just vertical space between
+            justifyContent: verticalAlignment,
+            // when wrapped this becomes the inner item alignment
+            alignItems: innerAlignment,
+            // when wrapped this becomes the horizontal space between
+            alignContent: horizontalAlignment,
+        }
+    }
+}
+
+const rowAlignment = (horizontalAlignment, verticalAlignment, innerAlignment, wrap) => {
+    if (!wrap) {
+        return {
+            justifyContent: horizontalAlignment,
+            alignItems: verticalAlignment,
+        }
+    } else {
+        return {
+            // still just horizontal space between
+            justifyContent: horizontalAlignment,
+            // when wrapped this becomes the inner item alignment
+            alignItems: innerAlignment,
+            // when wrapped this becomes the vertical space between
+            alignContent: verticalAlignment,
+        }
+    }
+}
+
+const computeFlexAlignmentAttributes = (directionIsRow, horizontalAlignment, verticalAlignment, innerAlignment, wrap) => {
+    // convert to css form
+    horizontalAlignment = humanPositionToCssFlexbox(horizontalAlignment)
+    verticalAlignment = humanPositionToCssFlexbox(verticalAlignment)
+    // then pick the correct one
+    if (directionIsRow) {
+        return rowAlignment(horizontalAlignment, verticalAlignment, innerAlignment, wrap)
+    } else {
+        return columnAlignment(horizontalAlignment, verticalAlignment, innerAlignment, wrap)
+    }
+}
+
+const setProperties = (element, properties)=>{
+    for (const [key, value] of Object.entries(properties)) {
+        try {
+            const kebabCase = key.replace(/(?<=[a-z])([A-Z])(?=[a-z])/g, (each)=>`-${each.toLowerCase()}`)
+            element.setAttribute(kebabCase, value)
+        } catch (error) {
+        }
+        element[key] = value
+    }
+}
+
+// TODO: don't modify prototypes in this file
+if (! (window.HTMLElement.prototype.add instanceof Function)) {
+    window.HTMLElement.prototype.add = window.SVGElement.prototype.add = window.HTMLSelectElement.prototype.add = function (...inputs) {
+        for (let each of inputs) {
+            if (typeof each == 'string') {
+                this.appendChild(new window.Text(each))
+            } else if (each instanceof Function) {
+                this.add(each())
+            } else if (each instanceof Array) {
+                this.add(...each)
+            } else if (each instanceof Object && each[elementSymbol]) {
+                this.add(each[elementSymbol])
+            } else {
+                this.appendChild(each)
             }
         }
-        return element.add(...children)
-    }
-}
-// 
-// add all the (exclusively) svg elements (because <a> tags are both SVG and Dom *facepalm*)
-// 
-const exclusivelySvgElements = [ "svg", "animate", "animateMotion", "animateTransform", "circle", "clipPath", "defs", "desc", "discard", "ellipse", "feBlend", "feColorMatrix", "feComponentTransfer", "feComposite", "feConvolveMatrix", "feDiffuseLighting", "feDisplacementMap", "feDistantLight", "feDropShadow", "feFlood", "feFuncA", "feFuncB", "feFuncG", "feFuncR", "feGaussianBlur", "feImage", "feMerge", "feMergeNode", "feMorphology", "feOffset", "fePointLight", "feSpecularLighting", "feSpotLight", "feTile", "feTurbulence", "filter", "foreignObject", "g", "hatch", "hatchpath", "image", "line", "linearGradient", "marker", "mask", "mesh", "meshgradient", "meshpatch", "meshrow", "metadata", "mpath", "path", "pattern", "polygon", "polyline", "radialGradient", "rect", "set", "stop", "switch", "symbol", "text", "textPath", "tspan", "unknown", "use", "view",]
-for (const each of tagNames) {
-    elements[each.toUpperCase()] = function(properties, ...children) {
-        // if only given children
-        if (properties instanceof window.Node || typeof properties == 'string') {
-            children.unshift(properties)
-            properties = null
-        }
-        // create either an html element or an svg element
-        const element = document.createElementNS('http://www.w3.org/2000/svg', each)
-        if (properties instanceof Object) {
-            for (const [key, value] of Object.entries(properties)) {
-                try {
-                    element.setAttribute(key, value)
-                } catch (error) {
-                }
-                element[key] = value
-            }
-        }
-        return element.add(...children)
+        return this
     }
 }
 
-function makeGlobal() {
-    Object.assign(window, elements)
-}
-
-// if there is no exporting system
-if(typeof exports == "undefined"){
-    // put everything in the window scope
-    makeGlobal()
-// if there is an export system
-} else {
-    // give the user the choice of local or window
-    module.exports = elements
-    module.exports.global = makeGlobal
+module.exports = ({ row, column, reverse, wrap, positionSelf='relativeToSelf', verticalAlignment='top', horizontalAlignment='left', innerAlignment='center', textWrapAlignment, children, ...props })=>{
+    const [htmlAttributes, cssAttributes] = splitHtmlCssAttributes(props)
+    const element = document.createElement("div")
+    // 
+    // style
+    // 
+    Object.assign(element.style, {
+        position: humanPositionToCssPosition(positionSelf) || 'relative',
+        display: 'flex',
+        flexDirection: computeDirection(row, column, reverse),
+        flexWrap: wrap === 'reverse' ? 'wrap-reverse' : (wrap&&'wrap'),
+        // text-align (effects how text will look when wrapped)
+        textAlign: textWrapAlignment || horizontalAlignment,
+        // handle the justifyContent/alignContent attributes
+        ...computeFlexAlignmentAttributes(
+            row,
+            horizontalAlignment,
+            verticalAlignment,
+            innerAlignment,
+            wrap,
+        ),
+        ...cssAttributes,
+    })
+    // 
+    // attributes
+    // 
+    setProperties(element, {name: "positioner", ...htmlAttributes})
+    element.add(children)
+    return element
 }
