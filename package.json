@@ -1,7 +1,7 @@
 {
-    "name": "vanilla-container",
+    "name": "container",
     "version": "1.0.0",
-    "description": "",
+    "description": "A simple container element !vanilla component",
     "main": "main.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"
@@ -12,7 +12,9 @@
     },
     "keywords": [
         "javascript",
+        "container",
         "vanilla",
+        "!vanilla",
         "dom"
     ],
     "author": "",
