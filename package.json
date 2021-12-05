@@ -1,6 +1,6 @@
 {
-    "name": "container",
-    "version": "1.0.0",
+    "name": "@!vanilla/container",
+    "version": "1.0.1",
     "description": "A simple container element !vanilla component",
     "main": "main.js",
     "scripts": {
@@ -17,6 +17,10 @@
         "!vanilla",
         "dom"
     ],
+    "exports": {
+        "import": "./main/main.mjs",
+        "require": "./main/main.js"
+    },
     "author": "",
     "license": "MIT",
     "bugs": {
